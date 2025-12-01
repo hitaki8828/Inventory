@@ -53,6 +53,34 @@
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
       }
+      
+      @media print {
+        @page {
+          margin: 0.5cm;
+          size: auto;
+        }
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          background-color: white !important;
+          color: black !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        #root, main {
+          height: auto !important;
+          overflow: visible !important;
+          display: block !important;
+        }
+        .print\:hidden {
+          display: none !important;
+        }
+        /* Ensure background colors for status indicators print */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
     </style>
   <script type="importmap">
 {

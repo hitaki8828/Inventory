@@ -11,6 +11,7 @@ const UserManagementPage: React.FC = () => {
       <Header 
         title="ユーザー管理" 
         showBack={true} 
+        onBack={() => navigate('/settings')}
         rightAction={
           <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-primary hover:bg-primary/10 transition-colors">
             <span className="material-symbols-outlined text-3xl">add</span>
