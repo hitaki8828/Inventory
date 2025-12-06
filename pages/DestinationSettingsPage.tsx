@@ -1,39 +1,34 @@
 import React, { useState, useMemo } from 'react';
 import Header from '../components/Header';
 import { useInventory } from '../contexts/InventoryContext';
-import { CategoryType } from '../types';
 
-const CategorySettingsPage: React.FC = () => {
-  const { categories, addCategory, deleteCategory } = useInventory();
+const DestinationSettingsPage: React.FC = () => {
+  const { destinations, addDestination, deleteDestination } = useInventory();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [selectedType, setSelectedType] = useState<CategoryType>('大分類');
+  const [newDestName, setNewDestName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAddCategory = () => {
-    if (!newCategoryName.trim()) return;
-    addCategory(newCategoryName.trim(), selectedType);
-    setNewCategoryName('');
+  const handleAddDestination = () => {
+    if (!newDestName.trim()) return;
+    addDestination(newDestName.trim());
+    setNewDestName('');
     setIsModalOpen(false);
   };
 
   const handleDelete = (id: string) => {
-    deleteCategory(id);
+    deleteDestination(id);
   };
 
-  const filteredCategories = useMemo(() => {
-    return categories.filter(c => 
-      c.type === selectedType && 
-      (searchQuery === '' || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredDestinations = useMemo(() => {
+    return destinations.filter(d => 
+      searchQuery === '' || d.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [categories, selectedType, searchQuery]);
-
-  const categoryTypes: CategoryType[] = ['大分類', '中分類', '小分類'];
+  }, [destinations, searchQuery]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
       <Header 
-        title="分類設定" 
+        title="出庫先設定" 
         showBack={true} 
         rightAction={
           <button 
@@ -46,31 +41,13 @@ const CategorySettingsPage: React.FC = () => {
       />
       
       <main className="flex-1 pb-8 flex flex-col">
-        {/* Controls Container */}
+        {/* Search Bar */}
         <div className="px-4 py-3 bg-white dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 sticky top-14 z-10 shadow-sm">
-          {/* Segmented Control */}
-          <div className="flex h-10 w-full items-center justify-center rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-            {categoryTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(type)}
-                className={`flex h-full flex-1 cursor-pointer items-center justify-center rounded-md text-sm font-bold transition-all ${
-                  selectedType === type
-                    ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-          
-           {/* Search Bar */}
-           <div className="mt-3 relative">
+           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
             <input 
               className="w-full h-10 rounded-lg border-none bg-gray-100 dark:bg-gray-800 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary/50" 
-              placeholder="分類を検索" 
+              placeholder="出庫先を検索" 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -78,16 +55,16 @@ const CategorySettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Category List */}
+        {/* Destination List */}
         <div className="flex flex-col bg-white dark:bg-background-dark flex-1">
-          {filteredCategories.length > 0 ? (
-            filteredCategories.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <p className="text-base font-medium text-gray-900 dark:text-white">{cat.name}</p>
+          {filteredDestinations.length > 0 ? (
+            filteredDestinations.map((d) => (
+              <div key={d.id} className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <p className="text-base font-medium text-gray-900 dark:text-white">{d.name}</p>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(cat.id);
+                    handleDelete(d.id);
                   }}
                   className="relative z-20 flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 cursor-pointer"
                   title="削除"
@@ -99,23 +76,23 @@ const CategorySettingsPage: React.FC = () => {
             ))
           ) : (
              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <p>登録された分類はありません</p>
+                <p>登録された出庫先はありません</p>
              </div>
           )}
         </div>
       </main>
 
-      {/* Add Category Modal */}
+      {/* Add Destination Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl animate-scale-in">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{selectedType}を追加</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">出庫先を追加</h3>
             <input
               autoFocus
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-3 text-base text-gray-900 dark:text-white focus:border-primary focus:ring-primary mb-6"
-              placeholder={`${selectedType}名を入力`}
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="出庫先名を入力"
+              value={newDestName}
+              onChange={(e) => setNewDestName(e.target.value)}
             />
             <div className="flex gap-3">
               <button
@@ -125,8 +102,8 @@ const CategorySettingsPage: React.FC = () => {
                 キャンセル
               </button>
               <button
-                onClick={handleAddCategory}
-                disabled={!newCategoryName.trim()}
+                onClick={handleAddDestination}
+                disabled={!newDestName.trim()}
                 className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 追加
@@ -139,4 +116,4 @@ const CategorySettingsPage: React.FC = () => {
   );
 };
 
-export default CategorySettingsPage;
+export default DestinationSettingsPage;

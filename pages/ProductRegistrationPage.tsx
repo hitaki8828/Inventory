@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
@@ -9,11 +10,11 @@ const ProductRegistrationPage: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // Get ID if editing
   const { addProduct, updateProduct, categories, products } = useInventory();
   
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [largeCategory, setLargeCategory] = useState('');
   const [mediumCategory, setMediumCategory] = useState('');
   const [smallCategory, setSmallCategory] = useState('');
+  const [price, setPrice] = useState('');
   const [initialStock, setInitialStock] = useState('');
   const [memo, setMemo] = useState('');
 
@@ -28,8 +29,8 @@ const ProductRegistrationPage: React.FC = () => {
         setLargeCategory(product.category);
         setMediumCategory(product.mediumCategory || '');
         setSmallCategory(product.smallCategory || '');
+        setPrice(product.price ? product.price.toString() : '');
         setInitialStock(product.stock.toString());
-        setImagePreview(product.imageUrl);
         // Memo field is not currently in Product type, but if it were, we'd load it here
       }
     }
@@ -40,17 +41,6 @@ const ProductRegistrationPage: React.FC = () => {
   const mediumCategories = useMemo(() => categories.filter(c => c.type === '中分類'), [categories]);
   const smallCategories = useMemo(() => categories.filter(c => c.type === '小分類'), [categories]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleRegister = () => {
     if (!name) {
       alert('商品名を入力してください');
@@ -58,6 +48,7 @@ const ProductRegistrationPage: React.FC = () => {
     }
 
     const stock = Number(initialStock) || 0;
+    const priceValue = price ? Number(price) : undefined;
     
     // Determine status based on stock
     let status: Product['status'] = 'In Stock';
@@ -70,9 +61,10 @@ const ProductRegistrationPage: React.FC = () => {
       category: largeCategory || '未分類',
       mediumCategory: mediumCategory || undefined,
       smallCategory: smallCategory || undefined,
-      imageUrl: imagePreview || 'https://via.placeholder.com/200?text=No+Image', // Fallback image
+      imageUrl: 'https://via.placeholder.com/200?text=No+Image', // Default placeholder
       stock: stock,
-      status: status
+      status: status,
+      price: priceValue
     };
 
     if (isEditing) {
@@ -89,21 +81,6 @@ const ProductRegistrationPage: React.FC = () => {
       <Header title={isEditing ? "商品編集" : "商品登録"} showBack={true} />
       
       <main className="flex-1 p-4 space-y-6">
-        {/* Image Upload */}
-        <div className="flex justify-center">
-            <label className="relative flex flex-col items-center justify-center w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 overflow-hidden">
-                {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <span className="material-symbols-outlined text-gray-400 text-3xl mb-1">add_a_photo</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">画像を追加</p>
-                    </div>
-                )}
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-            </label>
-        </div>
-
         <div className="space-y-2">
           <label className="text-sm font-medium text-[#111318] dark:text-white" htmlFor="product-name">商品名</label>
           <input 
@@ -158,6 +135,21 @@ const ProductRegistrationPage: React.FC = () => {
            <datalist id="small-category-list">
             {smallCategories.map(c => <option key={c.id} value={c.name} />)}
           </datalist>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-[#111318] dark:text-white" htmlFor="price">価格</label>
+          <div className="relative">
+            <input 
+              className="flex w-full min-w-0 flex-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 h-12 px-4 text-base text-right pr-12 dark:text-white" 
+              id="price" 
+              placeholder="0" 
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">円</span>
+          </div>
         </div>
 
         <div className="space-y-2">

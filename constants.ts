@@ -1,4 +1,5 @@
-import { Product, Transaction, User, Category } from './types';
+
+import { Product, Transaction, User, Category, Staff, Destination } from './types';
 
 export const MOCK_PRODUCTS: Product[] = [
   {
@@ -130,4 +131,16 @@ export const MOCK_CATEGORIES: Category[] = [
   { id: '9', name: 'アウター', type: '中分類', icon: 'checkroom' },
   { id: '10', name: 'Tシャツ', type: '小分類', icon: 'checkroom' },
   { id: '11', name: 'パンツ', type: '小分類', icon: 'trousers' },
+];
+
+export const MOCK_STAFF: Staff[] = [
+  { id: '1', name: '田中' },
+  { id: '2', name: '鈴木' },
+  { id: '3', name: '佐藤' },
+];
+
+export const MOCK_DESTINATIONS: Destination[] = [
+  { id: '1', name: '本社' },
+  { id: '2', name: '大阪支店' },
+  { id: '3', name: 'イベント会場A' },
 ];

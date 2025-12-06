@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import Header from '../components/Header';
 import { useInventory } from '../contexts/InventoryContext';
 
 const HistoryPage: React.FC = () => {
-  const [showPreview, setShowPreview] = useState(false);
   const { transactions, products, categories } = useInventory();
 
   // Filter States
@@ -13,13 +13,6 @@ const HistoryPage: React.FC = () => {
   const [largeCategory, setLargeCategory] = useState('');
   const [mediumCategory, setMediumCategory] = useState('');
   const [smallCategory, setSmallCategory] = useState('');
-
-  // Print Settings
-  const [printSettings, setPrintSettings] = useState({
-    orientation: 'portrait' as 'portrait' | 'landscape',
-    rangeStart: 1,
-    rangeEnd: 0 
-  });
 
   // Category Options (Dynamic from Context)
   const largeCategoryOptions = useMemo(() => {
@@ -97,140 +90,45 @@ const HistoryPage: React.FC = () => {
     });
   }, [transactions, searchQuery, startDate, endDate, largeCategory, mediumCategory, smallCategory, productCategoryMap]);
 
-  // Determine items to display based on preview mode and range settings
-  const itemsToDisplay = useMemo(() => {
-    if (!showPreview) return filteredTransactions;
-    
-    const start = Math.max(1, printSettings.rangeStart) - 1;
-    const end = printSettings.rangeEnd > 0 ? printSettings.rangeEnd : filteredTransactions.length;
-    
-    return filteredTransactions.slice(start, end);
-  }, [filteredTransactions, showPreview, printSettings]);
-
-  // Initialize range end when entering preview
-  useEffect(() => {
-    if (showPreview) {
-      setPrintSettings(prev => ({ ...prev, rangeEnd: filteredTransactions.length }));
-    }
-  }, [showPreview, filteredTransactions.length]);
-
   // Check if all items belong to the same product for single-product print layout
   const uniqueProductNames = useMemo(() => {
-    return Array.from(new Set(itemsToDisplay.map(t => t.productName)));
-  }, [itemsToDisplay]);
+    return Array.from(new Set(filteredTransactions.map(t => t.productName)));
+  }, [filteredTransactions]);
 
   const isSingleProduct = uniqueProductNames.length === 1;
   const singleProductName = isSingleProduct ? uniqueProductNames[0] : '';
 
+  const getCategoryString = (productName: string) => {
+    const cat = productCategoryMap.get(productName);
+    if (!cat) return '';
+    return [cat.large, cat.medium, cat.small].filter(Boolean).join(' > ');
+  };
+
   return (
-    <div className={`flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24 print:bg-white print:pb-0 ${showPreview ? 'fixed inset-0 z-50 bg-gray-100 overflow-y-auto pb-0 print:static print:h-auto print:overflow-visible print:bg-white' : ''}`}>
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24 print:bg-white print:pb-0 print:h-auto">
       
-      {/* Dynamic Print Styles */}
-      {showPreview && (
-        <style>
-          {`@media print { 
-              @page { size: ${printSettings.orientation}; margin: 10mm; } 
-              body { background-color: white; }
-              .print-container { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
-            }`}
-        </style>
-      )}
-
-      {/* Preview Toolbar */}
-      {showPreview && (
-        <div className="sticky top-0 z-50 flex flex-col bg-gray-900 text-white print:hidden shrink-0 shadow-md">
-          <div className="flex h-14 items-center justify-between px-4">
-            <button 
-              onClick={() => setShowPreview(false)} 
-              className="text-sm font-medium hover:text-gray-300 transition-colors"
-            >
-              閉じる
-            </button>
-            <span className="font-bold">PDFプレビュー</span>
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                setTimeout(() => window.print(), 50);
-              }}
-              className="flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-bold text-white hover:bg-primary/90 transition-colors cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-              PDF保存
-            </button>
-          </div>
-
-           {/* Print Controls */}
-           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 pb-3 text-sm border-t border-gray-800 pt-3">
-             <div className="flex items-center gap-3">
-                <span className="text-gray-400">向き:</span>
-                <div className="flex bg-gray-800 rounded-lg p-1">
-                   <button 
-                     onClick={() => setPrintSettings(p => ({...p, orientation: 'portrait'}))}
-                     className={`px-3 py-1 rounded-md transition-colors ${printSettings.orientation === 'portrait' ? 'bg-gray-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                   >縦</button>
-                   <button 
-                     onClick={() => setPrintSettings(p => ({...p, orientation: 'landscape'}))}
-                     className={`px-3 py-1 rounded-md transition-colors ${printSettings.orientation === 'landscape' ? 'bg-gray-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                   >横</button>
-                </div>
-             </div>
-             
-             <div className="flex items-center gap-3">
-                <span className="text-gray-400">範囲 (全{filteredTransactions.length}件):</span>
-                <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-1">
-                   <input 
-                      type="number" 
-                      min="1"
-                      max={filteredTransactions.length}
-                      value={printSettings.rangeStart}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 1;
-                        setPrintSettings(p => ({...p, rangeStart: val}));
-                      }}
-                      className="w-16 bg-transparent border-none text-center p-0 focus:ring-0 text-white font-mono placeholder-gray-600"
-                   />
-                   <span className="text-gray-500">~</span>
-                   <input 
-                      type="number" 
-                      min="1"
-                      max={filteredTransactions.length}
-                      value={printSettings.rangeEnd}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 0;
-                        setPrintSettings(p => ({...p, rangeEnd: val}));
-                      }}
-                      className="w-16 bg-transparent border-none text-center p-0 focus:ring-0 text-white font-mono placeholder-gray-600"
-                   />
-                </div>
-             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Standard Header - Hidden in Preview */}
-      {!showPreview && (
+      {/* Header - Hidden in Print */}
+      <div className="print:hidden">
         <Header 
           title="入出庫履歴" 
           rightAction={
             <button 
               className="flex items-center justify-center size-10 rounded-full text-primary hover:bg-primary/10 transition-colors"
               onClick={(e) => {
-                e.preventDefault();
-                setShowPreview(true);
+                e.stopPropagation();
+                window.print();
               }}
             >
               <span className="material-symbols-outlined text-2xl">print</span>
             </button>
           }
         />
-      )}
+      </div>
 
-      {/* Content Area */}
-      <div className={`flex flex-col flex-1 ${showPreview ? 'p-4 sm:p-8 overflow-y-auto bg-gray-100' : 'print:p-0'}`}>
+      <div className="flex flex-col flex-1">
         
-        {/* Filter - Hidden in Preview */}
-        {!showPreview && (
-          <div className="flex flex-col print:hidden">
+        {/* Filter - Hidden in Print */}
+        <div className="flex flex-col print:hidden">
             {/* Search Bar */}
              <div className="px-4 pt-3">
                 <div className="relative flex w-full items-center">
@@ -322,77 +220,17 @@ const HistoryPage: React.FC = () => {
                </div>
             </div>
           </div>
-        )}
+       
 
-        {/* Spacer for normal view */}
-        <div className={`h-4 ${showPreview ? 'hidden' : 'print:hidden'}`}></div>
-
-        {/* --- VIEW SWITCHER --- */}
-        
-        {showPreview ? (
-          // ========================
-          // PRINT PREVIEW VIEW (TABLE)
-          // ========================
-          <div 
-            className={`print-container bg-white shadow-lg mx-auto p-12 transition-all duration-300 print:shadow-none print:p-0 ${
-              printSettings.orientation === 'portrait' ? 'w-[210mm] min-h-[297mm]' : 'w-[297mm] min-h-[210mm]'
-            }`}
-          >
-             {/* Print Title */}
-            <div className="flex justify-between items-end border-b-2 border-gray-800 pb-4 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">入出庫履歴</h1>
-                  {isSingleProduct && (
-                    <h2 className="text-lg font-bold text-gray-800 mt-2">商品名: {singleProductName}</h2>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600">発行日: {new Date().toLocaleDateString('ja-JP')}</p>
-            </div>
-
-            {itemsToDisplay.length > 0 ? (
-              <table className="w-full text-xs text-left text-gray-700 border-collapse table-fixed">
-                <thead>
-                  <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-900">
-                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[20%]' : 'w-[15%]'}`}>日付</th>
-                    {!isSingleProduct && <th className="py-2 px-1 font-bold w-[25%]">商品名</th>}
-                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[25%]' : 'w-[15%]'}`}>担当者</th>
-                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[40%]' : 'w-[25%]'}`}>出庫先</th>
-                    <th className={`py-2 px-1 font-bold text-right ${isSingleProduct ? 'w-[15%]' : 'w-[10%]'}`}>数量</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {itemsToDisplay.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-gray-200 hover:bg-gray-50 break-inside-avoid">
-                      <td className="py-2 px-1 whitespace-nowrap">{transaction.date}</td>
-                      {!isSingleProduct && <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis">{transaction.productName}</td>}
-                      <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis">{transaction.user}</td>
-                      <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {transaction.type === 'out' ? transaction.destination || '-' : '-'}
-                      </td>
-                      <td className={`py-2 px-1 text-right font-medium whitespace-nowrap ${transaction.type === 'in' ? 'text-black' : 'text-red-600'}`}>
-                        {transaction.type === 'in' ? '+' : ''}{transaction.amount}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                履歴はありません
-              </div>
-            )}
-            
-            <div className="mt-8 text-right text-xs text-gray-400">
-              にきや Inventory
-            </div>
-          </div>
-        ) : (
-          // ========================
-          // NORMAL LIST VIEW (CARDS)
-          // ========================
-          <div className="flex flex-col gap-3 px-4 print:hidden">
-            {itemsToDisplay.map((transaction) => (
-              <div key={transaction.id} className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4 shadow-sm">
+        {/* Normal List View (Cards) - Hidden in Print */}
+        <div className="flex flex-col gap-3 px-4 print:hidden">
+            <div className="h-4"></div>
+            {filteredTransactions.map((transaction) => (
+              <div 
+                key={transaction.id} 
+                className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                onClick={() => setSearchQuery(transaction.productName)}
+              >
                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${transaction.type === 'in' ? 'bg-positive-light' : 'bg-negative-light'}`}>
                   <span className={`material-symbols-outlined ${transaction.type === 'in' ? 'text-positive' : 'text-negative'}`}>
                     {transaction.type === 'in' ? 'add' : 'remove'}
@@ -418,14 +256,76 @@ const HistoryPage: React.FC = () => {
                 </div>
               </div>
             ))}
-            {itemsToDisplay.length === 0 && (
+            {filteredTransactions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-                <span className="material-symbols-outlined text-4xl mb-2">history</span>
                 <p>履歴はありません</p>
               </div>
             )}
-          </div>
-        )}
+        </div>
+
+        {/* ========================
+            PRINT TABLE VIEW 
+            Visible ONLY when printing
+           ======================== */}
+        <div className="hidden print:block p-8">
+            {/* Print Header */}
+            <div className="flex justify-between items-end border-b-2 border-gray-800 pb-4 mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">入出庫履歴</h1>
+                  {isSingleProduct && (
+                    <div className="flex items-baseline gap-3 mt-2">
+                        <h2 className="text-lg font-bold text-gray-800">商品名: {singleProductName}</h2>
+                        <span className="text-sm text-gray-600 font-medium">{getCategoryString(singleProductName)}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">発行日: {new Date().toLocaleDateString('ja-JP')}</p>
+            </div>
+
+            {/* Table */}
+            {filteredTransactions.length > 0 ? (
+              <table className="w-full text-xs text-left text-gray-700 border-collapse table-fixed">
+                <thead>
+                  <tr className="bg-gray-100 border-b-2 border-gray-300 text-gray-900">
+                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[20%]' : 'w-[15%]'}`}>日付</th>
+                    {!isSingleProduct && <th className="py-2 px-1 font-bold w-[35%]">商品名</th>}
+                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[25%]' : 'w-[15%]'}`}>担当者</th>
+                    <th className={`py-2 px-1 font-bold ${isSingleProduct ? 'w-[40%]' : 'w-[25%]'}`}>出庫先</th>
+                    <th className={`py-2 px-1 font-bold text-right ${isSingleProduct ? 'w-[15%]' : 'w-[10%]'}`}>数量</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransactions.map((transaction) => (
+                    <tr key={transaction.id} className="border-b border-gray-200 break-inside-avoid">
+                      <td className="py-2 px-1 whitespace-nowrap align-middle">{transaction.date}</td>
+                      {!isSingleProduct && (
+                        <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis align-middle">
+                          <div className="text-gray-900 font-semibold">{transaction.productName}</div>
+                          <div className="text-[10px] text-gray-500">{getCategoryString(transaction.productName)}</div>
+                        </td>
+                      )}
+                      <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis align-middle">{transaction.user}</td>
+                      <td className="py-2 px-1 whitespace-nowrap overflow-hidden text-ellipsis align-middle">
+                        {transaction.type === 'out' ? transaction.destination || '-' : '-'}
+                      </td>
+                      <td className={`py-2 px-1 text-right font-medium whitespace-nowrap align-middle ${transaction.type === 'in' ? 'text-black' : 'text-red-600'}`}>
+                        {transaction.type === 'in' ? '+' : ''}{transaction.amount}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                履歴はありません
+              </div>
+            )}
+            
+            <div className="mt-8 text-right text-xs text-gray-400">
+              にきや Inventory
+            </div>
+        </div>
+
       </div>
     </div>
   );

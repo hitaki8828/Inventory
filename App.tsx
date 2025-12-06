@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -8,8 +9,8 @@ import InboundPage from './pages/InboundPage';
 import OutboundPage from './pages/OutboundPage';
 import ProductRegistrationPage from './pages/ProductRegistrationPage';
 import CategorySettingsPage from './pages/CategorySettingsPage';
-import UserManagementPage from './pages/UserManagementPage';
-import PermissionSettingsPage from './pages/PermissionSettingsPage';
+import StaffSettingsPage from './pages/StaffSettingsPage';
+import DestinationSettingsPage from './pages/DestinationSettingsPage';
 import { InventoryProvider } from './contexts/InventoryContext';
 
 const App: React.FC = () => {
@@ -28,8 +29,8 @@ const App: React.FC = () => {
           <Route path="/product/new" element={<ProductRegistrationPage />} />
           <Route path="/product/edit/:id" element={<ProductRegistrationPage />} />
           <Route path="/settings/categories" element={<CategorySettingsPage />} />
-          <Route path="/settings/users" element={<UserManagementPage />} />
-          <Route path="/settings/users/:id" element={<PermissionSettingsPage />} />
+          <Route path="/settings/staff" element={<StaffSettingsPage />} />
+          <Route path="/settings/destinations" element={<DestinationSettingsPage />} />
         </Routes>
       </HashRouter>
     </InventoryProvider>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
@@ -6,10 +7,11 @@ import { useInventory } from '../contexts/InventoryContext';
 const OutboundPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { updateStock } = useInventory();
+  const { updateStock, staff, destinations } = useInventory();
   const [productName, setProductName] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [destination, setDestination] = useState('');
+  const [personInCharge, setPersonInCharge] = useState('');
 
   // Auto-fill from navigation state
   useEffect(() => {
@@ -24,7 +26,7 @@ const OutboundPage: React.FC = () => {
   const handleRegister = () => {
     if (!productName || !stockQuantity) return;
 
-    updateStock(productName, Number(stockQuantity), 'out', destination);
+    updateStock(productName, Number(stockQuantity), 'out', destination, personInCharge);
     navigate('/inventory');
   };
 
@@ -64,11 +66,32 @@ const OutboundPage: React.FC = () => {
           <input 
             className="flex w-full min-w-0 flex-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 h-12 px-4 text-base dark:text-white" 
             id="destination" 
-            placeholder="出庫先を入力" 
+            placeholder="出庫先を入力または選択" 
+            list="destination-list"
             type="text"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
           />
+          <datalist id="destination-list">
+            {destinations.map(d => <option key={d.id} value={d.name} />)}
+          </datalist>
+        </div>
+
+        {/* Person In Charge Input */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-[#111318] dark:text-white" htmlFor="person_in_charge">担当者</label>
+          <input 
+            className="flex w-full min-w-0 flex-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 h-12 px-4 text-base dark:text-white" 
+            id="person_in_charge" 
+            placeholder="担当者を入力または選択" 
+            list="staff-list"
+            type="text"
+            value={personInCharge}
+            onChange={(e) => setPersonInCharge(e.target.value)}
+          />
+          <datalist id="staff-list">
+            {staff.map(s => <option key={s.id} value={s.name} />)}
+          </datalist>
         </div>
       </main>
 

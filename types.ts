@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -7,6 +8,7 @@ export interface Product {
   imageUrl: string;
   stock: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+  price?: number; // 価格
 }
 
 export interface Transaction {
@@ -34,4 +36,14 @@ export interface Category {
   name: string;
   type: CategoryType;
   icon: string;
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+}
+
+export interface Destination {
+  id: string;
+  name: string;
 }
